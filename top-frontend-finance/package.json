@@ -1,0 +1,41 @@
+{
+  "name": "top-frontend-finance",
+  "version": "1.0.0",
+  "description": "Microfrontend React para gerenciamento de finanças",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3002",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.2.6",
+    "@hookform/resolvers": "^3.3.4",
+    "@tanstack/react-query": "^5.17.19",
+    "antd": "^5.12.8",
+    "axios": "^1.6.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.49.3",
+    "react-router-dom": "^6.21.3",
+    "yup": "^1.3.3"
+  },
+  "devDependencies": {
+    "@originjs/vite-plugin-federation": "^1.3.5",
+    "@testing-library/jest-dom": "^6.2.0",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/ui": "^1.2.0",
+    "jsdom": "^23.2.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11",
+    "vitest": "^1.2.0",
+    "@vitest/coverage-v8": "^1.2.0"
+  }
+}

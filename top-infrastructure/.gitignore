@@ -1,0 +1,14 @@
+# Environment variables
+.env
+.env.local
+
+# Docker volumes
+volumes/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db

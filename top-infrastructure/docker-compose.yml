@@ -1,0 +1,167 @@
+version: '3.8'
+
+services:
+  # Bancos de Dados
+  db-users:
+    image: postgres:15-alpine
+    container_name: top-db-users
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: top_users_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-users-data:/var/lib/postgresql/data
+    networks:
+      - top-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db-finance:
+    image: postgres:15-alpine
+    container_name: top-db-finance
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: top_finance_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-finance-data:/var/lib/postgresql/data
+    networks:
+      - top-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Microservices
+  top-users:
+    build:
+      context: ../top-users
+      dockerfile: Dockerfile
+    container_name: top-users
+    environment:
+      NODE_ENV: production
+      PORT: 4001
+      DB_HOST: db-users
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: top_users_db
+      TCP_HOST: 0.0.0.0
+      TCP_PORT: 4001
+    ports:
+      - "4001:4001"
+    depends_on:
+      db-users:
+        condition: service_healthy
+    networks:
+      - top-network
+    restart: unless-stopped
+    command: sh -c "npm run migration:run && npm run seed:run && npm run start:prod"
+
+  top-finance:
+    build:
+      context: ../top-finance
+      dockerfile: Dockerfile
+    container_name: top-finance
+    environment:
+      NODE_ENV: production
+      PORT: 4002
+      DB_HOST: db-finance
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: top_finance_db
+      TCP_HOST: 0.0.0.0
+      TCP_PORT: 4002
+    ports:
+      - "4002:4002"
+    depends_on:
+      db-finance:
+        condition: service_healthy
+    networks:
+      - top-network
+    restart: unless-stopped
+    command: sh -c "npm run migration:run && npm run seed:run && npm run start:prod"
+
+  top-api-gateway:
+    build:
+      context: ../top-api-gateway
+      dockerfile: Dockerfile
+    container_name: top-api-gateway
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      USERS_SERVICE_HOST: top-users
+      USERS_SERVICE_PORT: 4001
+      FINANCE_SERVICE_HOST: top-finance
+      FINANCE_SERVICE_PORT: 4002
+    ports:
+      - "4000:4000"
+    depends_on:
+      - top-users
+      - top-finance
+    networks:
+      - top-network
+    restart: unless-stopped
+
+  # Frontend Applications
+  top-frontend-shell:
+    build:
+      context: ../top-frontend-shell
+      dockerfile: Dockerfile
+    container_name: top-frontend-shell
+    environment:
+      VITE_API_URL: http://localhost:4000
+    ports:
+      - "3000:80"
+    depends_on:
+      - top-api-gateway
+    networks:
+      - top-network
+    restart: unless-stopped
+
+  top-frontend-users:
+    build:
+      context: ../top-frontend-users
+      dockerfile: Dockerfile
+    container_name: top-frontend-users
+    environment:
+      VITE_API_URL: http://localhost:4000
+    ports:
+      - "3001:80"
+    depends_on:
+      - top-api-gateway
+    networks:
+      - top-network
+    restart: unless-stopped
+
+  top-frontend-finance:
+    build:
+      context: ../top-frontend-finance
+      dockerfile: Dockerfile
+    container_name: top-frontend-finance
+    environment:
+      VITE_API_URL: http://localhost:4000
+    ports:
+      - "3002:80"
+    depends_on:
+      - top-api-gateway
+    networks:
+      - top-network
+    restart: unless-stopped
+
+networks:
+  top-network:
+    driver: bridge
+
+volumes:
+  db-users-data:
+  db-finance-data:
